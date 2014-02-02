@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+
+<h:head>
+	<style type="text/css">
+ui-widget,.ui-widget .ui-widget {
+	font-size: 14px !important;
+}
+
+td {
+	vertical-align: top;
+}
+
+.pe-dynaform-cell-last {
+	text-align: left;
+	vertical-align: middle;
+	padding: 2px 10px 2px 0;
+	white-space: nowrap;
+	width: 100%
+}
+
+.pe-dynaform-label {
+	text-align: right;
+	vertical-align: middle;
+	padding: 2px 7px;
+	white-space: nowrap;
+	width: 200px;
+}
+
+.ui-inputfield {
+	font-size: 14px !important;
+	width: 100%;
+}
+</style>
+</h:head>
+<f:metadata>
+	<f:viewParam name="viewname" value="#{genericFormBeanDynamic.viewName}" />
+</f:metadata>
+<h:body>
+
+	<ui:include src="menubar.xhtml" />
+	<p:panel id="basic" style="width:33%">
+		<h:form id="mainpanel">
+			<h:panelGroup id="dynaFormGroup">
+
+				<pe:dynaForm buttonBarPosition="both" id="dynaForm"
+					value="#{genericFormBeanDynamic.model}" var="data">
+					<pe:dynaFormControl type="input" for="txt">
+						<p:inputText autoResize="true" id="txt" value="#{data.value}" />
+					</pe:dynaFormControl>
+
+					<pe:dynaFormControl type="booleanchoice">
+						<p:selectBooleanCheckbox value="#{data.value}"
+							style="vertical-align:middle" />
+					</pe:dynaFormControl>
+					<pe:dynaFormControl type="select" for="sel" styleClass="select">
+						<p:selectOneMenu id="sel" value="#{data.value}"
+							converter="javax.faces.Integer">
+							<f:selectItems value="#{data.selectItems}" var="item"
+								itemLabel="#{item.label}" itemValue="#{item.value}" />
+						</p:selectOneMenu>
+					</pe:dynaFormControl>
+					<pe:dynaFormControl type="timestamp">
+						<p:calendar style="width: 100%" value="#{data.value}"
+							pattern="dd.MM.yyyy HH:mm">
+							<f:converter
+								converterId="de.karlNet.converter.DateTimestampConverter" />
+						</p:calendar>
+					</pe:dynaFormControl>
+					<pe:dynaFormControl type="table">
+
+						<p:dataTable id="subObjects" var="object"
+							value="#{genericFormBeanDynamic.subObjects}">
+							<p:columns var="column" id="columns"
+								value="#{genericFormBeanDynamic.columnModels}">
+								<f:facet name="header">
+	      	          #{column.header}
+	      		      </f:facet>
+	      		      #{object[column.property]}  
+						</p:columns>
+						</p:dataTable>
+						<p:commandButton oncomplete="subDialog.show()" value="+" />
+						<p:button value="-" />
+					</pe:dynaFormControl>
+				</pe:dynaForm>
+				<div align="right">
+					<p:commandButton ajax="false" value="Submit"
+						action="#{genericFormBeanDynamic.create}" />
+					<p:commandButton type="reset" value="Reset"
+						style="margin-left: 5px;" />
+				</div>
+			</h:panelGroup>
+		</h:form>
+	</p:panel>
+	<p:resizable for="basic" />
+
+	<h:form prependId="false">
+		<p:dialog id="subDialog" widgetVar="subDialog">
+			<h:panelGroup>
+				<pe:dynaForm id="dynaFormSub"
+					value="#{genericFormBeanDynamic.subModel}" var="data">
+					<pe:dynaFormControl type="input" for="txt">
+						<p:inputText id="txt" value="#{data.value}" />
+					</pe:dynaFormControl>
+
+					<pe:dynaFormControl type="booleanchoice">
+						<p:selectBooleanCheckbox value="#{data.value}"
+							style="vertical-align:middle;" />
+					</pe:dynaFormControl>
+					<pe:dynaFormControl type="select" for="sel" styleClass="select">
+						<p:selectOneMenu id="sel" value="#{data.value}"
+							converter="javax.faces.Integer">
+							<f:selectItems value="#{data.selectItems}" var="item"
+								itemLabel="#{item.label}" itemValue="#{item.value}" />
+						</p:selectOneMenu>
+					</pe:dynaFormControl>
+					<pe:dynaFormControl type="timestamp">
+						<p:calendar value="#{data.value}" pattern="dd.MM.yyyy HH:mm">
+							<f:converter
+								converterId="de.karlNet.converter.DateTimestampConverter" />
+						</p:calendar>
+					</pe:dynaFormControl>
+				</pe:dynaForm>
+				<p:commandButton value="Submit" update="@all"
+					oncomplete="subDialog.hide()"
+					action="#{genericFormBeanDynamic.addSubelement}" />
+			</h:panelGroup>
+		</p:dialog>
+	</h:form>
+</h:body>
+</html>

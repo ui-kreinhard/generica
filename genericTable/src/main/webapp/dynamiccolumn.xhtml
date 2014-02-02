@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+
+
+<h:head>
+	<style type="text/css">
+ui-widget,.ui-widget .ui-widget {
+	font-size: 14px !important;
+}
+
+td {
+	vertical-align: top;
+}
+</style>
+</h:head>
+<f:metadata>
+	<f:viewParam name="viewname" value="#{tableBean.viewName}" />
+</f:metadata>
+<h:body>
+    <ui:include src="menubar.xhtml" />
+
+	<h:form prependId="false">
+		<p:confirmDialog id="deleteDialog"
+			message="Are you sure about deleting these entries?"
+			header="Delete selected Entries" severity="alert"
+			widgetVar="confirmation">
+
+			<p:commandButton id="confirm" value="Yes"
+				update=":#{p:component('objects')}" oncomplete="confirmation.hide()"
+				actionListener="#{tableBean.deleteSelectedObjects()}" />
+			<p:commandButton id="decline" value="No"
+				onclick="confirmation.hide()" type="button" />
+		</p:confirmDialog>
+	</h:form>
+	<h:form id="form">
+		<c:forEach var="menuItem" items="${tableBean.getActions()}">
+			<c:if test="${menuItem.is_action}">
+				<p:commandButton value="${menuItem.label_action}"
+					action="#{tableBean.navigateTo(menuItem.link)}" ajax="false" />
+			</c:if>
+			<c:if test="${!menuItem.is_action}">
+				<p:button value="${menuItem.label_action}" outcome="${menuItem.link}" />
+			</c:if>
+		</c:forEach>
+		<p:commandButton value="Delete" oncomplete="confirmation.show()" />
+		<p:dataTable id="objects" var="object" value="#{tableBean.objects}"
+			selection="#{tableBean.selectedObjects}" paginator="true"
+			paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+			rowsPerPageTemplate="50,100,1000" lazy="true" rows="100">
+			<p:column selectionMode="multiple" style="width:2%" />
+			<p:columns value="#{tableBean.columns}" var="column"
+				columnIndexVar="colIndex" sortBy="#{object[column.property]}"
+				filterBy="#{object[column.property]}">
+				<f:facet name="header">
+      	          
+      	          #{column.header}
+      	          
+      		      </f:facet>
+            #{object[column.property]}
+        </p:columns>
+		</p:dataTable>
+	</h:form>
+
+</h:body>
+</html>
