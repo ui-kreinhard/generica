@@ -1,8 +1,12 @@
+package de.karlNet.validator;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import de.karlNet.genericForm.Validator;
+import org.springframework.stereotype.Component;
 
+import de.karlNet.genericForm.Validator;
+@Component
 public class ValidatorTestExtension extends Validator {
 
 	public String buildSelectPart(Method methodToBeValidated,

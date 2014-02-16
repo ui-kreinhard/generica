@@ -1,16 +1,46 @@
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import de.karlNet.genericForm.ValidationResult;
+import de.karlNet.genericTable.daos.DataDAO;
 import de.karlNet.menu.Menu;
+import de.karlNet.validator.ValidatorTestExtension;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "/applicationContext.xml" })
 public class ValidatorTest {
+	@Autowired
+	private ValidatorTestExtension validatorTestExtension;
+
+	@Autowired
+	private DataDAO dataDAO;
+
+	@Test
+	public void testExecuted() throws SQLException, Exception {
+		Menu objectToBeValidated = new Menu();
+		objectToBeValidated.setId(-1);
+		objectToBeValidated.setLink("helo");
+		objectToBeValidated.setMenu_idmenu(2);
+		List<ValidationResult> validationResults = this.validatorTestExtension.validate(objectToBeValidated);
+		for (ValidationResult validationResult : validationResults) {
+			System.out.println(validationResult);
+			
+		}
+	}
 
 	@Test
 	public void testSelectPart() throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+			IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
 		Menu objectToBeValidated = new Menu();
 		objectToBeValidated.setId(1);
 		objectToBeValidated.setLink("helo");
@@ -18,8 +48,8 @@ public class ValidatorTest {
 		objectToBeValidated.setMenulabel("mymenulabel");
 		ValidatorTestExtension validatorTestExtension = new ValidatorTestExtension();
 		Method method = objectToBeValidated.getClass().getMethod("getId", null);
-		String ret = validatorTestExtension
-				.buildSelectPart(method,objectToBeValidated);
+		String ret = validatorTestExtension.buildSelectPart(method,
+				objectToBeValidated);
 		String anObject = "select '1' as id";
 		System.out.println(ret);
 		System.out.println(anObject);
@@ -29,20 +59,23 @@ public class ValidatorTest {
 
 	@Test
 	public void testUnionPart() throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+			IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
 		Menu objectToBeValidated = new Menu();
 		ValidatorTestExtension validatorTestExtension = new ValidatorTestExtension();
 		Method method = objectToBeValidated.getClass().getMethod("getId", null);
-		String ret = validatorTestExtension.buildUnionPart(method, objectToBeValidated);
+		String ret = validatorTestExtension.buildUnionPart(method,
+				objectToBeValidated);
 		String anObject = "union all select id from menu where 1!=1";
 		System.out.println(anObject);
 		System.out.println(ret);
-		Assert.assertTrue(ret
-				.equals(anObject));
+		Assert.assertTrue(ret.equals(anObject));
 	}
-	
+
 	@Test
-	public void testWithPart() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public void testWithPart() throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
 		Menu objectToBeValidated = new Menu();
 		objectToBeValidated.setId(1);
 		objectToBeValidated.setLink("helo");
@@ -50,23 +83,24 @@ public class ValidatorTest {
 		objectToBeValidated.setMenulabel("mymenulabel");
 		ValidatorTestExtension validatorTestExtension = new ValidatorTestExtension();
 		Method method = objectToBeValidated.getClass().getMethod("getId", null);
-		String ret = validatorTestExtension
-				.buildWithPart(method, objectToBeValidated);
+		String ret = validatorTestExtension.buildWithPart(method,
+				objectToBeValidated);
 		String anObject = "to_check_id as (select '1' as id union all select id from menu where 1!=1)";
 		System.out.println(ret);
 		System.out.println(anObject);
 		Assert.assertTrue(ret.equals(anObject));
 	}
-	
+
 	@Test
-	public void testWhole() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public void testWhole() throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
 		Menu objectToBeValidated = new Menu();
 		objectToBeValidated.setId(1);
 		objectToBeValidated.setLink("helo");
 		objectToBeValidated.setMenu_idmenu(2);
 		objectToBeValidated.setMenulabel("mymenulabel");
-		ValidatorTestExtension validatorTestExtension = new ValidatorTestExtension();
-		String ret = validatorTestExtension.buildWholeQuery(objectToBeValidated);
+		String ret = validatorTestExtension
+				.buildWholeQuery(objectToBeValidated);
 		System.out.println(ret);
 	}
 }
