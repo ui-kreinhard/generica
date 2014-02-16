@@ -25,8 +25,8 @@ td {
 <h:body>
 	<ui:include src="menubar.xhtml" />
 	<h:form>
-		<p:remoteCommand name="onload" action="#{schemaDAO.clearClassCache()}"
-			autoRun="true" />
+<!-- 		<p:remoteCommand name="onload" action="#{schemaDAO.clearClassCache()}" -->
+<!-- 			autoRun="true" /> -->
 		<h:outputText value="#{storedProcedureBean.fireSP()}"/>
     </h:form>
 </h:body>

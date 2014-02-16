@@ -118,8 +118,10 @@ public class TableBean implements Serializable {
 		String[] split = link.split("\\?");
 		if (split.length > 1) {
 			String[] split2 = split[1].split("viewname=");
-			this.genericFormBeanDynamic.setViewName(split2[1]);
-			this.genericFormBeanDynamic.checkViewName();
+			if(split2.length > 1) {
+				this.genericFormBeanDynamic.setViewName(split2[1]);
+				this.genericFormBeanDynamic.checkViewName();
+			}
 		}
 		
 		return link;

@@ -62,13 +62,16 @@ public class DataDAO {
 		Method[] methods = objectToBeInserted.getClass().getDeclaredMethods();
 		for (Method method : methods) {
 			if (method.getName().startsWith("get")) {
-				String attributeName = StringUtils.uncapitalize(method.getName().replaceAll("get", ""));
+				String attributeName = StringUtils.uncapitalize(method
+						.getName().replaceAll("get", ""));
 				columNames.add(attributeName);
 			}
 		}
-		String primaryKeyOfTable = this.schemaDAO.getPrimaryKeyOfTable(tableName);
+		String primaryKeyOfTable = this.schemaDAO
+				.getPrimaryKeyOfTable(tableName);
 		String query = "";
-		if(this.schemaDAO.getPrimaryKeyValueOfObject(tableName, objectToBeInserted)==null) {
+		if (this.schemaDAO.getPrimaryKeyValueOfObject(tableName,
+				objectToBeInserted) == null) {
 			columNames.remove(primaryKeyOfTable);
 			query = "INSERT INTO " + tableName + "("
 					+ StringUtils.join(columNames, ',') + ") VALUES (";
@@ -76,8 +79,8 @@ public class DataDAO {
 			query += ")";
 		} else {
 			query = "UPDATE " + tableName + " SET ";
-			query += StringUtils.join(columNames,"=?,");
-			query+= "=? WHERE " + primaryKeyOfTable + "=?";
+			query += StringUtils.join(columNames, "=?,");
+			query += "=? WHERE " + primaryKeyOfTable + "=?";
 		}
 		PreparedStatement preparedStatement = this.dbHandler
 				.prepareStatement(query);
@@ -90,28 +93,31 @@ public class DataDAO {
 			preparedStatement.setObject(i, value);
 			i++;
 		}
-		if(this.schemaDAO.getPrimaryKeyValueOfObject(tableName, objectToBeInserted)!=null) {
-			preparedStatement.setObject(i, this.schemaDAO.getPrimaryKeyValueOfObject(tableName, objectToBeInserted));
+		if (this.schemaDAO.getPrimaryKeyValueOfObject(tableName,
+				objectToBeInserted) != null) {
+			preparedStatement.setObject(i, this.schemaDAO
+					.getPrimaryKeyValueOfObject(tableName, objectToBeInserted));
 		}
 		this.dbHandler.executeUpdate(preparedStatement);
 	}
-	
-	public void delete(String tableName, HashMap<String, String> filter) throws SQLException {
+
+	public void delete(String tableName, HashMap<String, String> filter)
+			throws SQLException {
 		String query = "DELETE FROM " + tableName + " WHERE 1=1 ";
-		
+
 		for (String attributeOfFilter : filter.keySet()) {
 			query += " AND " + attributeOfFilter + "=?";
 		}
 
 		PreparedStatement preparedStatement = this.dbHandler
 				.prepareStatement(query);
-		int i=1;
+		int i = 1;
 		for (String attributeOfFilter : filter.keySet()) {
 			String value = filter.get(attributeOfFilter);
 			preparedStatement.setObject(i, value);
 			i++;
 		}
-		
+
 		this.dbHandler.executeUpdate(preparedStatement);
 	}
 
@@ -145,11 +151,12 @@ public class DataDAO {
 	}
 
 	public List<?> readOutViewOrTableWithoutMapping(String tableName,
-			Class<?> mappingClass, HashMap<String, String> filter) throws Exception {
+			Class<?> mappingClass, HashMap<String, String> filter)
+			throws Exception {
 		return this.readOutViewOrTable(tableName, mappingClass, null,
 				SortOrder.ASCENDING, 0, 1000, filter, false);
 	}
-	
+
 	public List<?> readOutViewOrTableWithoutMapping(String tableName,
 			Class<?> mappingClass) throws Exception {
 		return this.readOutViewOrTable(tableName, mappingClass, null,
@@ -189,11 +196,10 @@ public class DataDAO {
 				sortOrder, start, pageSize, filter, true);
 	}
 
-	public List<?> readOutViewOrTable(String tableName, Class<?> mappingClass,
+	private String getColumns(String tableName, Class<?> mappingClass,
 			String sortField, SortOrder sortOrder, int start, int pageSize,
 			Map<String, String> filter, boolean doMapping) throws SQLException,
 			Exception {
-		List resultOfQuery = new ArrayList();
 		String primaryKeyOfTable = this.schemaDAO
 				.getPrimaryKeyOfTable(tableName);
 		// if so we have to join it
@@ -202,7 +208,8 @@ public class DataDAO {
 		for (Method method : mappingClass.getDeclaredMethods()) {
 			if (method.getName().startsWith("get")) {
 				// check if we do have a mapping table
-				String attributeName = StringUtils.uncapitalize(method.getName().replace("get", ""));
+				String attributeName = StringUtils.uncapitalize(method
+						.getName().replace("get", ""));
 				if (doMapping
 						&& this.schemaDAO
 								.existMapping(tableName, attributeName)) {
@@ -223,7 +230,6 @@ public class DataDAO {
 				}
 			}
 		}
-
 		String query = String.format(
 				"SELECT " + StringUtils.join(columnsToReadOut, ",")
 						+ " FROM %s", tableName);
@@ -239,6 +245,26 @@ public class DataDAO {
 		}
 		query += " LIMIT " + pageSize + " OFFSET " + (start) + " ";
 		System.out.println(query);
+		return query;
+	}
+
+	public List<?> readOutViewOrTable(String tableName, Class<?> mappingClass,
+			String sortField, SortOrder sortOrder, int start, int pageSize,
+			Map<String, String> filter, boolean doMapping) throws SQLException,
+			Exception {
+		String queryToBeExecuted = this.getColumns(tableName, mappingClass,
+				sortField, sortOrder, start, pageSize, filter, doMapping);
+		return this.readOutViewOrTable(mappingClass, sortField,
+				sortOrder, start, pageSize, filter, queryToBeExecuted);
+	}
+
+	public List<?> readOutViewOrTable(Class<?> mappingClass,
+			String sortField, SortOrder sortOrder, int start, int pageSize,
+			Map<String, String> filter,
+			String queryToBeExecuted) throws SQLException, Exception {
+		List resultOfQuery = new ArrayList();
+
+		String query = queryToBeExecuted;
 		PreparedStatement preparedStatement = this.dbHandler
 				.prepareStatement(query);
 		preparedStatement.setString(1, "1");
@@ -295,18 +321,24 @@ public class DataDAO {
 		return o;
 	}
 
-	public Object executeStoredProcedure(String storedProcedureName) throws SQLException {
+	public Object executeStoredProcedure(String storedProcedureName)
+			throws SQLException {
 		String query = "SELECT " + storedProcedureName;
-		PreparedStatement preparedStatement = this.dbHandler.prepareStatement(query);
+		PreparedStatement preparedStatement = this.dbHandler
+				.prepareStatement(query);
 		ResultSet resultSet = this.dbHandler.executeQuery(query);
 		Object ret = null;
-		if(resultSet.next()) {
+		if (resultSet.next()) {
 			ret = resultSet.getObject(1);
 		}
 		return ret;
 	}
-	
-	public Object getByPK(String viewName, Object pk) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException {
-		return this.getByPK(viewName, this.schemaDAO.getColumnClass(viewName), pk);
+
+	public Object getByPK(String viewName, Object pk)
+			throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException, SQLException {
+		return this.getByPK(viewName, this.schemaDAO.getColumnClass(viewName),
+				pk);
 	}
 }
