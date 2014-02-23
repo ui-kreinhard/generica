@@ -1,0 +1,61 @@
+﻿-- Function: update_worktimes()
+
+-- DROP FUNCTION update_worktimes();
+-- Table: einkaufszettel
+
+-- DROP TABLE einkaufszettel;
+ 
+CREATE TABLE einkaufszettel
+(
+  id serial NOT NULL,
+  item_name character varying NOT NULL,
+  eingekauft boolean NOT NULL DEFAULT false
+);
+INSERT INTO einkaufszettel(
+           item_name, eingekauft)
+    VALUES ('asdf', false);
+
+-- View: einkaufszettel_todo
+
+-- DROP VIEW einkaufszettel_todo;
+INSERT INTO menu(
+            link, menulabel, menu_idmenu)
+    VALUES ('/dynamiccolumn.xhtml?viewname=einkaufszettel_todo','Einkaufszettel',0);
+ 
+CREATE OR REPLACE VIEW einkaufszettel_todo AS 
+ SELECT einkaufszettel.id, einkaufszettel.item_name, einkaufszettel.eingekauft
+   FROM einkaufszettel
+  WHERE einkaufszettel.eingekauft = false;
+
+CREATE OR REPLACE FUNCTION update_einkaufszettel_todo()
+  RETURNS trigger AS
+$BODY$
+   BEGIN
+ IF TG_OP = 'INSERT' THEN
+       
+        RETURN NEW;
+      ELSIF TG_OP = 'UPDATE' THEN
+    
+       RETURN NEW;
+	ELSIF TG_OP = 'DELETE' THEN
+	update einkaufszettel set eingekauft = true where id=OLD.id;
+       RETURN NULL;
+      END IF;
+      RETURN NEW;
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION update_einkaufszettel_todo()
+  OWNER TO postgres;
+
+-- Trigger: worktimes_per_day_dml_trig on worktimes_per_day
+
+-- DROP TRIGGER worktimes_per_day_dml_trig ON worktimes_per_day;
+
+CREATE TRIGGER update_einkaufszettel_todo_trig
+  INSTEAD OF INSERT OR UPDATE OR DELETE
+  ON einkaufszettel_todo
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_einkaufszettel_todo();
+
