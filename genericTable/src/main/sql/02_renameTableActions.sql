@@ -1,0 +1,1 @@
+﻿alter table table_actions RENAME TO table_actions_inner;
