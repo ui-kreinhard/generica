@@ -59,7 +59,13 @@ public class TableBean implements Serializable {
 	}
 
 	public void deleteSelectedObjects() throws SQLException {
-		this.dataDAO.delete(this.viewName, this.selectedObjects);
+		List<Object> listToDelete = new ArrayList<Object>();
+		for (Object string : selectedObjects) {
+			if(!string.equals("")) {
+				listToDelete.add(string);
+			}
+		}
+		this.dataDAO.delete(this.viewName, listToDelete.toArray());
 	}
 
 	private boolean checkViewName() throws Exception {
