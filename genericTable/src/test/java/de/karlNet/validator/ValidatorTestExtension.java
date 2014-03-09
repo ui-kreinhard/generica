@@ -3,10 +3,14 @@ package de.karlNet.validator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
-import de.karlNet.genericForm.Validator;
-@Component
+import de.karlNet.generica.genericForm.Validator;
+@Controller
+@Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ValidatorTestExtension extends Validator {
 
 	public String buildSelectPart(Method methodToBeValidated,

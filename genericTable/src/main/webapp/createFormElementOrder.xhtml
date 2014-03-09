@@ -22,34 +22,20 @@ td {
 <h:body>
 	<ui:include src="menubar.xhtml" />
 	<h:form>
-		<h:panelGrid>
-			<p:row>
-				<p:column colspan="2">
-					<p:selectOneListbox id="order" value="#{fieldOrderBean.selectedField}">
-						<f:selectItems value="#{fieldOrderBean.fieldOrderMappings}"
-							var="field" itemLabel="#{field.column_name}"
-							itemValue="#{field.column_name}" />
-					</p:selectOneListbox>
-				</p:column>
-			</p:row>
-			<p:row>
-				<p:column>
-					<p:commandButton value="Up" update="order" ajax="true" actionListener="#{fieldOrderBean.moveElementUp()}"/>
-				</p:column>
-				<p:column>
-					<p:commandButton value="Down" update="order" ajax="true" actionListener="#{fieldOrderBean.moveElementDown()}"
-						 />
-				</p:column>
-				<p:column>
-					<p:commandButton value="Submit" actionListener="#{fieldOrderBean.submit()}"/>
-				</p:column>
-			</p:row>
-			<p:row>
-				<p:column></p:column>
-				<p:column></p:column>
+		<p:outputPanel>
+			<p:panel>
+				<h:panelGrid width="100%" columns="2" style="margin-bottom:10px">
+					<f:facet name="header">
 
-			</p:row>
-		</h:panelGrid>
+					</f:facet>
+					<h:outputLabel value="Username" />
+					<h:outputText value="#{ldapTreeBean.selectedNode.ldapObject.dn}" />
+					<p:commandButton value="Login" action="#{cc.attrs.beanToUse.create}"
+						ajax="false"></p:commandButton>
+				</h:panelGrid>
+
+			</p:panel>
+		</p:outputPanel>
 	</h:form>
 </h:body>
 </html>
