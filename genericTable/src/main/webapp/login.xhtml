@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<style type="text/css">
+ui-widget,.ui-widget .ui-widget {
+	font-size: 14px !important;
+}
+
+td {
+	vertical-align: top;
+}
+</style>
+</h:head>
+<h:body>
+	<h:form>
+
+		<p:panel header="Login">
+			<h:panelGrid columns="2" id="matchGrid">
+
+				<h:outputText value="Username:" />
+				<p:inputText value="#{loginBean.username}" />
+
+				<h:outputText value="Password: " />
+				<p:password value="#{loginBean.password}" />
+			</h:panelGrid>
+
+			<p:commandButton ajax="false" action="#{loginBean.login()}"
+				value="Login" />
+		</p:panel>
+	</h:form>
+</h:body>
+</html>
