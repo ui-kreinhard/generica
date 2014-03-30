@@ -16,6 +16,10 @@ public class LoginTest extends BaseTest {
 	@Autowired
 	private DBHandler dbHandler;
 	
+	@Test
+	public void testNUll() {
+		System.out.println(null==null);
+	}
 	
 	@Test
 	public void successfulLogin() {

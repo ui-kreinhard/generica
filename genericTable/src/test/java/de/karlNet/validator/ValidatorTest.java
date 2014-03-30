@@ -33,7 +33,6 @@ public class ValidatorTest  extends BaseTest {
 		List<ValidationResult> validationResults = this.validatorTestExtension.validate(objectToBeValidated);
 		for (ValidationResult validationResult : validationResults) {
 			System.out.println(validationResult);
-			
 		}
 	}
 
@@ -51,8 +50,6 @@ public class ValidatorTest  extends BaseTest {
 		String ret = validatorTestExtension.buildSelectPart(method,
 				objectToBeValidated);
 		String anObject = "select '1' as id";
-		System.out.println(ret);
-		System.out.println(anObject);
 		Assert.assertTrue(ret.equals(anObject));
 
 	}
@@ -67,8 +64,6 @@ public class ValidatorTest  extends BaseTest {
 		String ret = validatorTestExtension.buildUnionPart(method,
 				objectToBeValidated);
 		String anObject = "union all select id from menu where 1!=1";
-		System.out.println(anObject);
-		System.out.println(ret);
 		Assert.assertTrue(ret.equals(anObject));
 	}
 
@@ -86,8 +81,6 @@ public class ValidatorTest  extends BaseTest {
 		String ret = validatorTestExtension.buildWithPart(method,
 				objectToBeValidated);
 		String anObject = "to_check_id as (select '1' as id union all select id from menu where 1!=1)";
-		System.out.println(ret);
-		System.out.println(anObject);
 		Assert.assertTrue(ret.equals(anObject));
 	}
 

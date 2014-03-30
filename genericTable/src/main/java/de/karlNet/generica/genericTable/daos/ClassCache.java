@@ -14,6 +14,11 @@ public class ClassCache {
 	private int version = 0;
 	private HashMap<String, Class<?>> classCacheMap = new HashMap<String, Class<?>>();
 
+	public int getVersion() {
+		return version;
+	}
+
+	
 	public void putInCacache(String viewName, Class<?> defintion) {
 		this.classCacheMap.put(viewName + "_" + version, defintion);
 	}

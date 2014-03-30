@@ -22,9 +22,7 @@ public class LanguageDAO {
 	private TableBean tableBean;
 
 	public String changeLanguage(String language_name)
-			throws NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, SQLException {
+			throws Exception {
 		this.dataDAO.create(new Language(language_name), "current_language");
 		String viewName = this.tableBean.getViewName();
 		this.tableBean.setViewName("");

@@ -119,9 +119,7 @@ public class FieldOrderBean {
 		return fieldOrderMappings;
 	}
 
-	public String submit() throws NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, SQLException {
+	public String submit() throws Exception {
 		HashMap<String, String> filter=  new HashMap<String, String>();
 		filter.put("table_name", this.viewName);
 		this.dataDAO.delete("formelements_order", filter);

@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 
 import de.karlNet.dbhandler.DBHandler;
+import de.karlNet.generica.genericForm.ValidationResult;
+import de.karlNet.generica.genericForm.Validator;
 
 @Controller
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -28,6 +30,9 @@ public class DataDAO {
 	private DBHandler dbHandler;
 	@Autowired
 	private SchemaDAO schemaDAO;
+	
+	@Autowired
+	private Validator validator;
 
 	public int countTableRows(String tableName, Map<String, String> filterMap)
 			throws SQLException {
@@ -59,9 +64,8 @@ public class DataDAO {
 	}
 
 	public void create(Object objectToBeInserted, String tableName)
-			throws SQLException, NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
+			throws Exception {
+
 		ArrayList<String> columNames = new ArrayList<String>();
 		Method[] methods = objectToBeInserted.getClass().getDeclaredMethods();
 		for (Method method : methods) {

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 
 import de.karlNet.dbhandler.DBHandler;
+import de.karlNet.generica.genericTable.daos.ClassCache;
 import de.karlNet.generica.genericTable.daos.DataDAO;
 
 import javax.annotation.*;
@@ -21,7 +22,10 @@ import javax.annotation.*;
 @Controller
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class Validator {
-
+	@Autowired
+	private ClassCache classCache;
+	
+	
 	@PostConstruct
 	public void init() throws Exception {
 		this.getCheckConstraints();
@@ -33,12 +37,20 @@ public class Validator {
 	private HashMap<String, check_constraints> hashMap = new HashMap<String, check_constraints>();
 
 	private String createHashtableIdentifier(String tableName, String columnName) {
-		return tableName.toLowerCase() + "_" + columnName.toLowerCase();
+		return this.createHashtableIdentifier(tableName, columnName, null);
+	}
+	
+	private String createHashtableIdentifier(String tableName, String columnName, Integer version) {
+		String versionString = "";
+		if(version!=null) {
+			versionString = version + "_";
+		}
+		return tableName.toLowerCase() + "_" + versionString + columnName.toLowerCase();
 	}
 
 	private String createHashtableIdentifier(check_constraints check_Constraint) {
 		return this.createHashtableIdentifier(check_Constraint.getTable_name(),
-				check_Constraint.getColumn_name());
+				check_Constraint.getColumn_name(), this.classCache.getVersion());
 	}
 
 	private void getCheckConstraints() throws Exception {
@@ -75,7 +87,7 @@ public class Validator {
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
 		unionPart += " " + columnName;
 		unionPart += " from "
-				+ objectToBeValidated.getClass().getSimpleName().toLowerCase();
+				+ objectToBeValidated.getClass().getSimpleName().toLowerCase().replaceAll( "_resolved_" + this.classCache.getVersion(), "");
 		unionPart += " where 1!=1";
 		return unionPart;
 	}
@@ -100,16 +112,17 @@ public class Validator {
 			IllegalArgumentException, InvocationTargetException {
 		String methodName = methodToBeValidated.getName();
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
-		String tableName = objectToBeValidated.getClass().getSimpleName().toLowerCase();
+		String tableName = objectToBeValidated.getClass().getSimpleName().toLowerCase().replace("_resolved", "");
 		String checkPart = "select count(*)::int, " + "'" + tableName + "'," + "'" + columnName + "'" + " from to_check_" + columnName
 				+ " where 1=1";
 		String createHashtableIdentifier = this.createHashtableIdentifier(
-				objectToBeValidated.getClass().getSimpleName().toLowerCase(),
+				objectToBeValidated.getClass().getSimpleName().toLowerCase().replace("_resolved", ""),
 				columnName.toLowerCase());
 		if (this.hashMap.containsKey(createHashtableIdentifier)) {
 			checkPart += " AND "
 					+ this.hashMap.get(createHashtableIdentifier)
 							.getCheck_clause();
+			checkPart += " having count(*) <= 0";
 		}
 		return checkPart;
 	}
@@ -129,11 +142,13 @@ public class Validator {
 		for (Method method : objectToBeValidated.getClass()
 				.getDeclaredMethods()) {
 			String methodName = method.getName();
+			
 			String columnName = methodName.replaceFirst("get", "")
 					.toLowerCase();
-
+			String tableName = objectToBeValidated.getClass().getSimpleName().toLowerCase().replaceAll( "_resolved_" + this.classCache.getVersion(), "");
+			
 			String createHashtableIdentifier = this.createHashtableIdentifier(
-					objectToBeValidated.getClass().getSimpleName()
+					objectToBeValidated.getClass().getSimpleName().replace("_resolved","")
 							.toLowerCase(), columnName.toLowerCase());
 			if (this.hashMap.containsKey(createHashtableIdentifier)) {
 				if (method.getName().startsWith("get")) {
@@ -152,7 +167,7 @@ public class Validator {
 					.toLowerCase();
 
 			String createHashtableIdentifier = this.createHashtableIdentifier(
-					objectToBeValidated.getClass().getSimpleName()
+					objectToBeValidated.getClass().getSimpleName().replace("_resolved","")
 							.toLowerCase(), columnName.toLowerCase());
 			if (this.hashMap.containsKey(createHashtableIdentifier)) {
 				if (method.getName().startsWith("get")) {

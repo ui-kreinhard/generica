@@ -1,22 +1,16 @@
 package de.karlNet.generica.genericForm;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
-import net.schmizz.sshj.sftp.Request;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.primefaces.context.RequestContext;
 import org.primefaces.extensions.model.dynaform.DynaFormControl;
 import org.primefaces.extensions.model.dynaform.DynaFormLabel;
@@ -27,7 +21,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Controller;
 
-import de.karlNet.generica.formElement.FieldOrderMapping;
 import de.karlNet.generica.formElement.FieldOrderMappingAndTranslation;
 import de.karlNet.generica.genericTable.TableBean;
 import de.karlNet.generica.genericTable.daos.ClassDefinitionWithFK;
@@ -40,27 +33,12 @@ import de.karlNet.generica.genericTable.daos.SchemaDAO;
 public class GenericFormBeanDynamic {
 	private String viewName = "";
 
-	private boolean enteredViaSetter = false;
-
-	public String getViewName() {
-		return viewName;
-	}
-
-	public void setViewName(String viewName) {
-		this.enteredViaSetter = true;
-		this.viewName = viewName;
-	}
 	private String viewNameForSubObjects;
 	private Object objectToBeHandled;
 	private Object subObjectToBeHandled;
 	private List<Object> subObjects = new ArrayList<Object>();
-	public List<Object> getSubObjects() {
-		return subObjects;
-	}
+	private List<ColumnModel> columnModels = null;
 
-	public void setSubObjects(List<Object> subObjects) {
-		this.subObjects = subObjects;
-	}
 	@Autowired
 	private SchemaDAO schemaDAO;
 	@Autowired
@@ -71,6 +49,24 @@ public class GenericFormBeanDynamic {
 	private DynaFormModel model = new DynaFormModel();
 
 	private DynaFormModel subModel = new DynaFormModel();
+	@Autowired
+	private Validator validator;
+
+	public String getViewName() {
+		return viewName;
+	}
+
+	public void setViewName(String viewName) {
+		this.viewName = viewName;
+	}
+
+	public List<Object> getSubObjects() {
+		return subObjects;
+	}
+
+	public void setSubObjects(List<Object> subObjects) {
+		this.subObjects = subObjects;
+	}
 
 	public DynaFormModel getSubModel() {
 		return subModel;
@@ -79,9 +75,6 @@ public class GenericFormBeanDynamic {
 	public void setSubModel(DynaFormModel subModel) {
 		this.subModel = subModel;
 	}
-
-	private List<ColumnModel> columnModels = null;
-
 
 	public List<ColumnModel> getColumnModels() {
 		return columnModels;
@@ -107,15 +100,14 @@ public class GenericFormBeanDynamic {
 	private Object createGuiElements(DynaFormModel parentFormModel,
 			String viewName, Object[] selectedObjects) throws Exception {
 		Object objectToBeHandled = null;
-		
+
 		ClassDefinitionWithFK fkDefintionContainer = this.schemaDAO
 				.getColumnDefinitionWithMappingValues(viewName);
 		Class<?> mappedTableClass = fkDefintionContainer.getClassDefinition();
 		Object seleObject = this.findFirstNonEmptyElement(selectedObjects);
 		if (seleObject != null) {
 			this.tableBean.setSelectedObjects(new Object[] {});
-			objectToBeHandled = this.dataDAO.getByPK(this.viewName,
-					seleObject);
+			objectToBeHandled = this.dataDAO.getByPK(this.viewName, seleObject);
 
 		} else {
 			objectToBeHandled = mappedTableClass.newInstance();
@@ -133,7 +125,8 @@ public class GenericFormBeanDynamic {
 			HashMap<String, String> filter = new HashMap<String, String>();
 			filter.put("table_name", viewName);
 			List fieldOrderMappings = this.dataDAO
-					.readOutViewOrTableWithoutMapping("formelement_orders_and_translation",
+					.readOutViewOrTableWithoutMapping(
+							"formelement_orders_and_translation",
 							FieldOrderMappingAndTranslation.class, filter);
 			if (fieldOrderMappings.size() > 0) {
 				for (Object object : fieldOrderMappings) {
@@ -143,10 +136,12 @@ public class GenericFormBeanDynamic {
 				}
 				Collections.sort(declaredMethods, new Comparator<Method>() {
 					public int compare(Method a, Method b) {
-						Integer aOrderId = orderMapping.get(a.getName()
-								.replace("get", "").toLowerCase()).getId();
-						Integer bOrderId = orderMapping.get((b.getName()
-								.replace("get", "").toLowerCase())).getId();
+						Integer aOrderId = orderMapping.get(
+								a.getName().replace("get", "").toLowerCase())
+								.getId();
+						Integer bOrderId = orderMapping.get(
+								(b.getName().replace("get", "").toLowerCase()))
+								.getId();
 						return aOrderId.compareTo(bOrderId);
 					}
 				});
@@ -158,29 +153,28 @@ public class GenericFormBeanDynamic {
 				DynaFormRow row = parentFormModel.createRegularRow();
 
 				String translation = attributeName;
-				if(orderMapping.get(attributeName.toLowerCase())!=null) {
-					translation = orderMapping.get(attributeName.toLowerCase()).getTranslation();
-				} 
+				if (orderMapping.get(attributeName.toLowerCase()) != null) {
+					translation = orderMapping.get(attributeName.toLowerCase())
+							.getTranslation();
+				}
 				DynaFormLabel label = row.addLabel(translation);
 				if (fkDefintionContainer.isFK(attributeName)) {
 					List selectItems = fkDefintionContainer
 							.getSelectionValues(attributeName);
-					DynaFormControl control = row.addControl(
-							new Property(attributeName, objectToBeHandled,
-									selectItems), "select");
+					DynaFormControl control = row.addControl(new Property(
+							attributeName, objectToBeHandled, selectItems),
+							"select");
 				} else if (method.getReturnType().equals(String.class)) {
 					DynaFormControl control = row.addControl(new Property(
 							attributeName, objectToBeHandled), "input");
 					label.setForControl(control);
 				} else if (method.getReturnType().equals(Boolean.class)) {
 					DynaFormControl control = row.addControl(new Property(
-							attributeName, objectToBeHandled),
-							"booleanchoice");
+							attributeName, objectToBeHandled), "booleanchoice");
 					label.setForControl(control);
 				} else if (method.getReturnType().equals(Timestamp.class)) {
-					DynaFormControl control = row
-							.addControl(new Property(attributeName,
-									objectToBeHandled), "timestamp");
+					DynaFormControl control = row.addControl(new Property(
+							attributeName, objectToBeHandled), "timestamp");
 					label.setForControl(control);
 				}
 				// else if (method.getReturnType().equals(Integer.class)) {
@@ -197,7 +191,7 @@ public class GenericFormBeanDynamic {
 				// }
 				// }
 			}
-			
+
 		}
 		return objectToBeHandled;
 	}
@@ -205,7 +199,8 @@ public class GenericFormBeanDynamic {
 	public boolean checkViewName() throws SecurityException, Exception {
 		Object[] selectedObjects = this.tableBean.getSelectedObjects();
 		model = new DynaFormModel();
-		this.objectToBeHandled = this.createGuiElements(this.model, this.viewName, selectedObjects);
+		this.objectToBeHandled = this.createGuiElements(this.model,
+				this.viewName, selectedObjects);
 		// now get data for table
 		// check if there's a fk relation in tableschema
 		// if so add table element with the coresponding data
@@ -223,20 +218,21 @@ public class GenericFormBeanDynamic {
 
 			this.subModel = new DynaFormModel();
 			this.subObjects.clear();
-			this.subObjectToBeHandled = this.createGuiElements(subModel, viewNameForSubObjects, null);
+			this.subObjectToBeHandled = this.createGuiElements(subModel,
+					viewNameForSubObjects, null);
 		} else {
 			this.columnModels = null;
 		}
 		return true;
 	}
-	
+
 	public void addSubelement() throws Exception {
 		this.subObjects.add(this.subObjectToBeHandled);
 		this.subModel = new DynaFormModel();
 		RequestContext.getCurrentInstance().update("subObjects");
-		this.subObjectToBeHandled = this.createGuiElements(subModel, viewNameForSubObjects, null);
+		this.subObjectToBeHandled = this.createGuiElements(subModel,
+				viewNameForSubObjects, null);
 	}
-	
 
 	public Object getObjectToBeHandled() throws SecurityException, Exception {
 		this.checkViewName();
@@ -247,16 +243,22 @@ public class GenericFormBeanDynamic {
 		this.objectToBeHandled = objectToBeHandled;
 	}
 
-	public String create() throws NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, SQLException {
+	public String create() throws Exception {
+		List<ValidationResult> validationResults = this.validator
+				.validate(this.objectToBeHandled);
+		for (ValidationResult validationResult : validationResults) {
+	        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,"Invalid input for:", validationResult.getColumn_name()));  
+		}
+		if(!validationResults.isEmpty()) {
+			return "";
+		}
+
 		this.dataDAO.create(this.objectToBeHandled, this.viewName);
 		for (Object subObject : this.subObjects) {
 			this.dataDAO.create(subObject, this.viewNameForSubObjects);
 		}
 		String viewNameForReturn = this.viewName;
 		this.viewName = "";
-		this.enteredViaSetter = false;
 		this.subObjects.clear();
 		return "/dynamiccolumn.xhtml?viewname=" + viewNameForReturn;
 	}

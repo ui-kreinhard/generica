@@ -136,7 +136,7 @@ public class TestData extends BaseTest {
 	}
 
 	@Test
-	public void testDeletionWithFilter() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException {
+	public void testDeletionWithFilter() throws Exception {
 		List<FieldOrderMapping> fieldOrderMappings = new ArrayList<FieldOrderMapping>();
 		{
 			FieldOrderMapping fieldOrderMapping = new FieldOrderMapping();
