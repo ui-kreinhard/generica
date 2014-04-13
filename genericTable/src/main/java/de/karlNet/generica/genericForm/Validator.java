@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -79,7 +80,12 @@ public class Validator {
 
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
 		Object value = methodToBeValidated.invoke(objectToBeValidated, null);
-		query += " '" + value + "' as " + columnName;
+		if(value==null) {
+			query += " null ";
+		} else {
+			query += " '" + value + "' ";
+		}
+		query += " as " + columnName;
 		return query;
 	}
 
@@ -91,7 +97,12 @@ public class Validator {
 
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
 		Object value = methodToBeValidated.invoke(objectToBeValidated, null);
-		query += " '" + value + "' as " + columnName;
+		if(value==null) {
+			query += " null ";
+		} else {
+			query += " '" + value + "' ";
+		}
+		query += " as " + columnName;
 		return query;
 	}
 
@@ -119,6 +130,20 @@ public class Validator {
 				query += this.buildColumnValuePart(method, objectToBeValidated);
 			}
 		}
+		String tableName = objectToBeValidated.getClass().getSimpleName().toLowerCase().replaceAll("_resolved","").replaceAll( "_" + this.classCache.getVersion(), "");
+		query += " union all " +
+				"SELECT 'dummy'" ;
+
+		// okay now append a union part so we have correct types
+		for (Method method : objectToBeValidated.getClass()
+				.getDeclaredMethods()) {
+			if (method.getName().startsWith("get")) {
+				String methodName = method.getName();
+				String columnName = methodName.replaceFirst("get", "").toLowerCase();
+				query += ", " + columnName;
+			}
+		}
+		query += " FROM " + tableName + " where 1!=1";
 		query += ")";
 		return query;
 	}
@@ -143,13 +168,16 @@ public class Validator {
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
 		String tableName = objectToBeValidated.getClass().getSimpleName()
 				.toLowerCase().replace("_resolved", "");
-		String checkPart = "select count(*)::int, " + "'" + tableName + "',"
-				+ "'" + columnName + "'" + " from to_check"
-				+ " where 1=1";
+		
 		String createHashtableIdentifier = this.createHashtableIdentifier(
 				objectToBeValidated.getClass().getSimpleName().toLowerCase()
 						.replace("_resolved", ""), columnName.toLowerCase());
+		String checkPart = "";
 		if (this.hashMap.containsKey(createHashtableIdentifier)) {
+			 checkPart += " union all "
+						+ "select count(*)::int, " + "'" + tableName + "',"
+						+ "'" + columnName + "'" + " from to_check"
+						+ " where 1=1";
 			checkPart += " AND "
 					+ this.hashMap.get(createHashtableIdentifier)
 							.getCheck_clause();
@@ -177,8 +205,7 @@ public class Validator {
 		for (Method method : objectToBeValidated.getClass()
 				.getDeclaredMethods()) {
 			if (method.getName().startsWith("get")) {
-				query += " union all "
-						+ this.buildCheckPart(method, objectToBeValidated);
+				query +=  this.buildCheckPart(method, objectToBeValidated);
 			}
 		}
 		return query;
