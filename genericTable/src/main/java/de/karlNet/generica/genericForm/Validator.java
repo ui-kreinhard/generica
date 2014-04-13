@@ -9,7 +9,6 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -148,19 +147,6 @@ public class Validator {
 		return query;
 	}
 
-	protected String buildWithPart(Method methodToBeValidated,
-			Object objectToBeValidated) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-		String withPart = "to_check" + " as (";
-		String selectPart = this.buildSelectPart(methodToBeValidated,
-				objectToBeValidated);
-		String unionPart = this.buildUnionPart(methodToBeValidated,
-				objectToBeValidated);
-		withPart += selectPart + " " + unionPart;
-		withPart += ")";
-		return withPart;
-	}
-
 	protected String buildCheckPart(Method methodToBeValidated,
 			Object objectToBeValidated) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
@@ -184,12 +170,6 @@ public class Validator {
 			checkPart += " having count(*) <= 0";
 		}
 		return checkPart;
-	}
-
-	protected String buildWherePart(Method methodToBeValidated,
-			Object objectToBeValidated) {
-		String ret = "";
-		return ret;
 	}
 
 	protected String buildWholeQuery(Object objectToBeValidated)

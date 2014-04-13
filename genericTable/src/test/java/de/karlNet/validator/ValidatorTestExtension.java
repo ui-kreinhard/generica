@@ -24,11 +24,6 @@ public class ValidatorTestExtension extends Validator {
 		return super.buildUnionPart(methodToBeValidated, objectToBeValidated);
 	}
 
-	public String buildWithPart(Method methodToBeValidated,
-			Object objectToBeValidated) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-		return super.buildWithPart(methodToBeValidated, objectToBeValidated);
-	}
 	public String buildWholeQuery(Object objectToBeValidated) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		return super.buildWholeQuery(objectToBeValidated);
 	}
