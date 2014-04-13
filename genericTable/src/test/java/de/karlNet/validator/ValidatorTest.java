@@ -80,6 +80,7 @@ public class ValidatorTest  extends BaseTest {
 		Method method = objectToBeValidated.getClass().getMethod("getId", null);
 		String ret = validatorTestExtension.buildWithPart(method,
 				objectToBeValidated);
+		System.out.println(ret);
 		String anObject = "to_check_id as (select '1' as id union all select id from menu where 1!=1)";
 		Assert.assertTrue(ret.equals(anObject));
 	}

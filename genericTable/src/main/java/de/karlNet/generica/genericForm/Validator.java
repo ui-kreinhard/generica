@@ -7,25 +7,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 
-import de.karlNet.dbhandler.DBHandler;
 import de.karlNet.generica.genericTable.daos.ClassCache;
 import de.karlNet.generica.genericTable.daos.DataDAO;
-
-import javax.annotation.*;
 
 @Controller
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class Validator {
 	@Autowired
 	private ClassCache classCache;
-	
-	
+
 	@PostConstruct
 	public void init() throws Exception {
 		this.getCheckConstraints();
@@ -39,18 +36,22 @@ public class Validator {
 	private String createHashtableIdentifier(String tableName, String columnName) {
 		return this.createHashtableIdentifier(tableName, columnName, null);
 	}
-	
-	private String createHashtableIdentifier(String tableName, String columnName, Integer version) {
+
+	private String createHashtableIdentifier(String tableName,
+			String columnName, Integer version) {
 		String versionString = "";
-		if(version!=null) {
+		if (version != null) {
 			versionString = version + "_";
 		}
-		return tableName.toLowerCase() + "_" + versionString + columnName.toLowerCase();
+		return tableName.toLowerCase() + "_" + versionString
+				+ columnName.toLowerCase();
 	}
 
 	private String createHashtableIdentifier(check_constraints check_Constraint) {
-		return this.createHashtableIdentifier(check_Constraint.getTable_name(),
-				check_Constraint.getColumn_name(), this.classCache.getVersion());
+		return this
+				.createHashtableIdentifier(check_Constraint.getTable_name(),
+						check_Constraint.getColumn_name(),
+						this.classCache.getVersion());
 	}
 
 	private void getCheckConstraints() throws Exception {
@@ -59,13 +60,27 @@ public class Validator {
 		this.hashMap = new HashMap<String, check_constraints>();
 		for (Object object : readOutViewOrTable) {
 			check_constraints check_Constraint = (check_constraints) object;
-			this.hashMap.put(this.createHashtableIdentifier(check_Constraint),
-					check_Constraint);
+			String createHashtableIdentifier = this
+					.createHashtableIdentifier(check_Constraint);
+			System.out.println(createHashtableIdentifier);
+			this.hashMap.put(createHashtableIdentifier, check_Constraint);
 		}
 	}
 
 	private void getUniqueConstraints() {
 
+	}
+
+	protected String buildColumnValuePart(Method methodToBeValidated,
+			Object objectToBeValidated) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
+		String query = ", ";
+		String methodName = methodToBeValidated.getName();
+
+		String columnName = methodName.replaceFirst("get", "").toLowerCase();
+		Object value = methodToBeValidated.invoke(objectToBeValidated, null);
+		query += " '" + value + "' as " + columnName;
+		return query;
 	}
 
 	protected String buildSelectPart(Method methodToBeValidated,
@@ -87,17 +102,31 @@ public class Validator {
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
 		unionPart += " " + columnName;
 		unionPart += " from "
-				+ objectToBeValidated.getClass().getSimpleName().toLowerCase().replaceAll( "_resolved_" + this.classCache.getVersion(), "");
+				+ objectToBeValidated.getClass().getSimpleName().toLowerCase()
+						.replaceAll("_resolved", "")
+						.replaceAll("_" + this.classCache.getVersion(), "");
 		unionPart += " where 1!=1";
 		return unionPart;
+	}
+
+	protected String buildWithPart(Object objectToBeValidated)
+			throws IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException {
+		String query = ", to_check as ( select 'dummy' ";
+		for (Method method : objectToBeValidated.getClass()
+				.getDeclaredMethods()) {
+			if (method.getName().startsWith("get")) {
+				query += this.buildColumnValuePart(method, objectToBeValidated);
+			}
+		}
+		query += ")";
+		return query;
 	}
 
 	protected String buildWithPart(Method methodToBeValidated,
 			Object objectToBeValidated) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
-		String methodName = methodToBeValidated.getName();
-		String columnName = methodName.replaceFirst("get", "").toLowerCase();
-		String withPart = "to_check_" + columnName + " as (";
+		String withPart = "to_check" + " as (";
 		String selectPart = this.buildSelectPart(methodToBeValidated,
 				objectToBeValidated);
 		String unionPart = this.buildUnionPart(methodToBeValidated,
@@ -112,12 +141,14 @@ public class Validator {
 			IllegalArgumentException, InvocationTargetException {
 		String methodName = methodToBeValidated.getName();
 		String columnName = methodName.replaceFirst("get", "").toLowerCase();
-		String tableName = objectToBeValidated.getClass().getSimpleName().toLowerCase().replace("_resolved", "");
-		String checkPart = "select count(*)::int, " + "'" + tableName + "'," + "'" + columnName + "'" + " from to_check_" + columnName
+		String tableName = objectToBeValidated.getClass().getSimpleName()
+				.toLowerCase().replace("_resolved", "");
+		String checkPart = "select count(*)::int, " + "'" + tableName + "',"
+				+ "'" + columnName + "'" + " from to_check"
 				+ " where 1=1";
 		String createHashtableIdentifier = this.createHashtableIdentifier(
-				objectToBeValidated.getClass().getSimpleName().toLowerCase().replace("_resolved", ""),
-				columnName.toLowerCase());
+				objectToBeValidated.getClass().getSimpleName().toLowerCase()
+						.replace("_resolved", ""), columnName.toLowerCase());
 		if (this.hashMap.containsKey(createHashtableIdentifier)) {
 			checkPart += " AND "
 					+ this.hashMap.get(createHashtableIdentifier)
@@ -139,51 +170,28 @@ public class Validator {
 
 		// dummy so we can directly union all without any special case f*ckup
 		String query = "with dummy as (select 1)";
-		for (Method method : objectToBeValidated.getClass()
-				.getDeclaredMethods()) {
-			String methodName = method.getName();
-			
-			String columnName = methodName.replaceFirst("get", "")
-					.toLowerCase();
-			String tableName = objectToBeValidated.getClass().getSimpleName().toLowerCase().replaceAll( "_resolved_" + this.classCache.getVersion(), "");
-			
-			String createHashtableIdentifier = this.createHashtableIdentifier(
-					objectToBeValidated.getClass().getSimpleName().replace("_resolved","")
-							.toLowerCase(), columnName.toLowerCase());
-			if (this.hashMap.containsKey(createHashtableIdentifier)) {
-				if (method.getName().startsWith("get")) {
-					query += ", "
-							+ this.buildWithPart(method, objectToBeValidated);
-				}
-			}
-		}
+		query += this.buildWithPart(objectToBeValidated);
 		// append checkPart
 		// dummy so we can directly union all without any special case f*ckup
 		query += "select null as is_valid, null as table_name, null as column_name where 1!=?";
 		for (Method method : objectToBeValidated.getClass()
 				.getDeclaredMethods()) {
-			String methodName = method.getName();
-			String columnName = methodName.replaceFirst("get", "")
-					.toLowerCase();
-
-			String createHashtableIdentifier = this.createHashtableIdentifier(
-					objectToBeValidated.getClass().getSimpleName().replace("_resolved","")
-							.toLowerCase(), columnName.toLowerCase());
-			if (this.hashMap.containsKey(createHashtableIdentifier)) {
-				if (method.getName().startsWith("get")) {
-					query += " union all "
-							+ this.buildCheckPart(method, objectToBeValidated);
-				}
+			if (method.getName().startsWith("get")) {
+				query += " union all "
+						+ this.buildCheckPart(method, objectToBeValidated);
 			}
 		}
 		return query;
 	}
 
-	public List<ValidationResult> validate(Object objectToBeValidated) throws SQLException, Exception {
+	public List<ValidationResult> validate(Object objectToBeValidated)
+			throws SQLException, Exception {
 		String queryToBeExecuted = this.buildWholeQuery(objectToBeValidated);
-		List uncastedValidationResults = this.dataDAO.readOutViewOrTable(ValidationResult.class,
-				null, null, 0, 5000, null, queryToBeExecuted);
-		List<ValidationResult> validationResults = new ArrayList<ValidationResult>(uncastedValidationResults);
+		List uncastedValidationResults = this.dataDAO.readOutViewOrTable(
+				ValidationResult.class, null, null, 0, 5000, null,
+				queryToBeExecuted);
+		List<ValidationResult> validationResults = new ArrayList<ValidationResult>(
+				uncastedValidationResults);
 		return validationResults;
 	}
 }
