@@ -105,6 +105,7 @@
 			<groupId>javax.el</groupId>
 			<artifactId>el-api</artifactId>
 			<version>1.0</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -117,12 +118,6 @@
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.25</version>
 		</dependency>
 
 		<dependency>
