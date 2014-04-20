@@ -8,13 +8,13 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.karlNet.login.LoginBean;
+import de.karlNet.login.LoginLogoutBean;
 import de.karlNet.login.NotLoggedInException;
 
 @Aspect
 public class AuthenticationIntercepter {
 	@Autowired
-	private LoginBean loginBean;
+	private LoginLogoutBean loginBean;
 	private boolean authenticationIsActived = false;
 
 	public void setAuthenticationIsActived(boolean authenticationIsActived) {

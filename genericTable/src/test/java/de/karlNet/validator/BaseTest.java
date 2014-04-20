@@ -6,12 +6,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.karlNet.login.LoginBean;
+import de.karlNet.login.LoginLogoutBean;
 import de.karlNet.login.NotLoggedInException;
 
 public class BaseTest {
 	@Autowired
-	private LoginBean loginBean;
+	private LoginLogoutBean loginBean;
 	
 	@Before
 	public void setupAuthentication() throws NotLoggedInException, SQLException {

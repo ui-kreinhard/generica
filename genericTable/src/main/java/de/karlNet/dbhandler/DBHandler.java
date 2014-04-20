@@ -73,7 +73,7 @@ public class DBHandler {
 		return this.connection.prepareStatement(query);
 	}
 
-	public boolean login(String username, String password) throws SQLException {
+	public boolean connectWithUsernamePassword(String username, String password) throws SQLException {
 		try {
 			this.connection = DriverManager.getConnection(url, username, password);
 		} catch (SQLException e) {
@@ -85,10 +85,16 @@ public class DBHandler {
 		return true;
 	}
 	
+	public void disconnect() throws SQLException {
+		if(this.connection!=null) {
+			this.connection.close();
+			this.connection = null;
+		}
+	}
+	
 	@PostConstruct
 	public void init() throws SQLException {
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
 			Class.forName("org.postgresql.Driver");
 			this.connection = DriverManager.getConnection(url, user, password);
 			

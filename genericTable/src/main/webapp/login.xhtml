@@ -26,13 +26,13 @@ td {
 			<h:panelGrid columns="2" id="matchGrid">
 
 				<h:outputText value="Username:" />
-				<p:inputText value="#{loginBean.username}" />
+				<p:inputText value="#{loginLogoutBean.username}" />
 
 				<h:outputText value="Password: " />
-				<p:password value="#{loginBean.password}" />
+				<p:password value="#{loginLogoutBean.password}" />
 			</h:panelGrid>
 
-			<p:commandButton ajax="false" action="#{loginBean.login()}"
+			<p:commandButton ajax="false" action="#{loginLogoutBean.login()}"
 				value="Login" />
 		</p:panel>
 	</h:form>

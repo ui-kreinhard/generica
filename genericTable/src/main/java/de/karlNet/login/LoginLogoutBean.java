@@ -11,7 +11,7 @@ import de.karlNet.dbhandler.DBHandler;
 
 @Controller
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class LoginBean {
+public class LoginLogoutBean {
 	@Autowired
 	private DBHandler dbHandler;
 	private String username;
@@ -62,7 +62,7 @@ public class LoginBean {
 	}
 	
 	public String login() throws SQLException, NotLoggedInException {
-		boolean loggedIn = this.dbHandler.login(username, password);
+		boolean loggedIn = this.dbHandler.connectWithUsernamePassword(username, password);
 		this.isLoggedIn = loggedIn;
 		this.username = "";
 		this.password = "";
@@ -70,5 +70,14 @@ public class LoginBean {
 			throw new NotLoggedInException();
 		}
 		return "welcome.xhtml";
+	}
+	
+	public String logout() {
+		try {
+			this.isLoggedIn = false;
+			this.dbHandler.disconnect();
+		} catch (SQLException e) {
+		}
+		return "login.xhtml";
 	}
 }

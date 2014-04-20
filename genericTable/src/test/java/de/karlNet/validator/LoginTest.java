@@ -25,7 +25,7 @@ public class LoginTest extends BaseTest {
 	public void successfulLogin() {
 		boolean login = false;
 		try {
-			login = this.dbHandler.login("postgres", "he8.st:!");
+			login = this.dbHandler.connectWithUsernamePassword("postgres", "he8.st:!");
 		} catch (SQLException e) {
 			Assert.fail();
 		}
@@ -36,7 +36,7 @@ public class LoginTest extends BaseTest {
 	public void failedLogin() {
 		boolean login = false;
 		try {
-			login = this.dbHandler.login("postgres", "he8.st:");
+			login = this.dbHandler.connectWithUsernamePassword("postgres", "he8.st:");
 		} catch (SQLException e) {
 			Assert.fail();
 		}
@@ -47,10 +47,31 @@ public class LoginTest extends BaseTest {
 	public void failedLoginWrong() {
 		boolean login = false;
 		try {
-			login = this.dbHandler.login("postgress", "he8.st:!");
+			login = this.dbHandler.connectWithUsernamePassword("postgress", "he8.st:!");
 		} catch (SQLException e) {
 			Assert.fail();
 		}
 		Assert.assertTrue(!login);
+	}
+	
+	@Test
+	public void loginLogoutTest() {
+		boolean login = false;
+		try {
+			login = this.dbHandler.connectWithUsernamePassword("postgres", "he8.st:!");
+			Assert.assertTrue(login);
+			this.dbHandler.disconnect();
+		} catch (Exception e) {
+			Assert.fail();
+		}
+		// this query has now to fail
+		try {
+			this.dbHandler.executeQuery("Select 1");
+		} catch(Exception e) {
+			Assert.assertTrue(true);
+			return;
+		}
+		// okay no exception cautght...
+		Assert.assertFalse(true);
 	}
 }

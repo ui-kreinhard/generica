@@ -30,6 +30,9 @@ td {
 						<p:menuitem value="${languageItem.language_name}" ajax="false" actionListener="#{languageDAO.changeLanguage(languageItem.language_name)}" />
 					</c:forEach>
 				</p:menuButton>
+				
+			<p:commandButton value="Logout" actionListener="#{loginLogoutBean.logout}"   
+            ajax="false" />  
 			</div>
 			<h:form>
 				<p:menubar autoDisplay="false" model="#{menuBean.menuModel}" />
